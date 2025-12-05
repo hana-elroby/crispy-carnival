@@ -14,16 +14,12 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   late AnimationController _chartController;
-  late AnimationController _textController;
   late AnimationController _pulseController;
   late AnimationController _rotateController;
 
   late Animation<double> _chartSlideAnimation;
   late Animation<double> _chartFadeAnimation;
   late Animation<double> _chartScaleAnimation;
-  late Animation<double> _textSlideAnimation;
-  late Animation<double> _textFadeAnimation;
-  late Animation<double> _textScaleAnimation;
   late Animation<double> _pulseAnimation;
   late Animation<double> _rotateAnimation;
 
@@ -54,24 +50,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       CurvedAnimation(parent: _chartController, curve: Curves.easeOutBack),
     );
 
-    _textController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-
-    _textSlideAnimation = Tween<double>(begin: 60.0, end: 0.0).animate(
-      CurvedAnimation(parent: _textController, curve: Curves.easeOutCubic),
-    );
-
-    _textFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeIn));
-
-    _textScaleAnimation = Tween<double>(begin: 0.7, end: 1.0).animate(
-      CurvedAnimation(parent: _textController, curve: Curves.easeOutBack),
-    );
-
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -93,11 +71,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
   void _startAnimations() {
     _chartController.forward();
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        _textController.forward();
-      }
-    });
   }
 
   void _navigateToOnboarding() {
@@ -111,7 +84,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _chartController.dispose();
-    _textController.dispose();
     _pulseController.dispose();
     _rotateController.dispose();
     super.dispose();
@@ -120,15 +92,22 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
       backgroundColor: AppColors.primary,
-      body: Center(
-        child: _buildAnimatedChart(),
+      body: SafeArea(
+        child: Center(
+          child: _buildAnimatedChart(),
+        ),
       ),
     );
   }
 
   Widget _buildAnimatedChart() {
+    // حساب حجم الشاشة - Calculate screen size
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    // حجم اللوجو يكون 55% من عرض الشاشة
+    final logoSize = (screenWidth * 0.55).clamp(200.0, 320.0);
+    
     return AnimatedBuilder(
       animation: _chartController,
       builder: (context, child) {
@@ -148,44 +127,16 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                       builder: (context, child) {
                         return Transform.rotate(
                           angle: _rotateAnimation.value,
-                          child: Image.asset(
-                            'assets/images/bluelogosavelet.png'),
+                          child: SizedBox(
+                            width: logoSize,
+                            height: logoSize,
+                            child: Image.asset(
+                              'assets/images/bluelogosavelet.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
                         );
                       },
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAnimatedText() {
-    return AnimatedBuilder(
-      animation: _textController,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, _textSlideAnimation.value),
-          child: Transform.scale(
-            scale: _textScaleAnimation.value,
-            child: Opacity(
-              opacity: _textFadeAnimation.value,
-              child: AnimatedBuilder(
-                animation: _pulseAnimation,
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _pulseAnimation.value,
-                    child: const Text(
-                      AppConstants.appName,
-                      style: TextStyle(
-                        fontSize: 72,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.secondary,
-                        letterSpacing: 4,
-                      ),
                     ),
                   );
                 },

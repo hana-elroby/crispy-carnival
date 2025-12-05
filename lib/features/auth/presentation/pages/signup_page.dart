@@ -30,6 +30,33 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.primary,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _dateOfBirthController.text =
+            '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+      });
+    }
+  }
+
   @override
   void dispose() {
     _fullNameController.dispose();
@@ -60,18 +87,18 @@ class _SignUpPageState extends State<SignUpPage> {
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               children: [
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 const Text(
                   'Create Account',
                   style: TextStyle(
-                    fontSize: 36,
+                    fontSize: 38,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF2C3E50),
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 24),
                 Container(
-                  padding: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(30),
@@ -91,25 +118,31 @@ class _SignUpPageState extends State<SignUpPage> {
                       _buildTextField(
                         label: 'Full Name',
                         controller: _fullNameController,
-                        hint: 'example@example.com',
+                        hint: 'John Doe',
+                        keyboardType: TextInputType.name,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       _buildTextField(
                         label: 'Email',
                         controller: _emailController,
                         hint: 'example@example.com',
+                        keyboardType: TextInputType.emailAddress,
                       ),
                       const SizedBox(height: 20),
                       _buildTextField(
                         label: 'Mobile Number',
                         controller: _mobileController,
-                        hint: '+ 123 456 789',
+                        hint: '+20 123 456 7890',
+                        keyboardType: TextInputType.phone,
                       ),
                       const SizedBox(height: 20),
                       _buildTextField(
                         label: 'Date Of Birth',
                         controller: _dateOfBirthController,
-                        hint: 'DD / MM /YYY',
+                        hint: 'DD/MM/YYYY',
+                        keyboardType: TextInputType.datetime,
+                        readOnly: true,
+                        onTap: () => _selectDate(context),
                       ),
                       const SizedBox(height: 20),
                       _buildPasswordField(
@@ -197,22 +230,41 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      SizedBox(
+                      Container(
                         width: double.infinity,
                         height: 56,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              Color(0xFF01579B),
+                              Color(0xFF0277BD),
+                              Color(0xFF0288D1),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF0D47A1).withValues(alpha: 0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
                         child: ElevatedButton(
                           onPressed: _handleSignUp,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(28),
                             ),
-                            elevation: 2,
                           ),
                           child: const Text(
                             'Sign Up',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                               letterSpacing: 0.5,
@@ -274,6 +326,9 @@ class _SignUpPageState extends State<SignUpPage> {
     required String label,
     required TextEditingController controller,
     required String hint,
+    TextInputType? keyboardType,
+    bool readOnly = false,
+    VoidCallback? onTap,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,20 +336,26 @@ class _SignUpPageState extends State<SignUpPage> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 16,
+            fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Color(0xFF5A6C7D),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         TextFormField(
           controller: controller,
+          keyboardType: keyboardType,
+          readOnly: readOnly,
+          onTap: onTap,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'This field is required';
             }
             if (label == 'Email' && !value.contains('@')) {
               return 'Please enter a valid email';
+            }
+            if (label == 'Mobile Number' && value.length < 10) {
+              return 'Please enter a valid mobile number';
             }
             return null;
           },
@@ -335,12 +396,12 @@ class _SignUpPageState extends State<SignUpPage> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 16,
+            fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Color(0xFF5A6C7D),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           obscureText: !isVisible,
